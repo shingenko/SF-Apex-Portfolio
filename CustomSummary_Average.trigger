@@ -18,11 +18,8 @@ Trigger Averager on CustomSummaryObject__c (after insert, after update)
 													WHERE Date_Closed__c >= : cobjsum.DateRangeBegin__c and Date_Closed__c <= : cobjsum.DateRangeEnd__c];
 				
 				Double intdata = (Double)groupedResults[0].get('aver');
-				
-				
 				CustomSummaryObject__c updateThis = new CustomSummaryObject__c();
-				updateThis.Value__c = intdata;
-				//updateThis.Test__c = intdata;
+				updateThis.Average__c = intdata;
 				updateThis.Id = cobjsum.Id;
 				toUpdate.add(updateThis);
 			}
