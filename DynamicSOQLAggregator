@@ -1,0 +1,83 @@
+//This code piece uses queryFilters to determine what fields we will look at, and what operation we will do to prepare to update a //primary record, and the value we will update it with. For example, If we have a custom sObject named Financial__c and we want to SUM //every value on the "Amount_Spent__c" field, and then update it back to the "Total_Amount_Spect__c" field on an opportunity. This will //query all Financial__c(or whatever your input is) records related to each opportunity included in the list (be it a manually created //on, or a trigger keyset) and calculate the value to update the field on the Opportuinty/parent record, then give you a find list //output you can perform DML on.
+
+
+
+public class DynamicSOQLAggregator
+{
+    //the following class will be used to house the field names
+    //and desired operations
+    public class queryFilters
+    {
+        public String whatToDo {get;set;}
+        public String fieldOnQueriedRecord {get;set;}
+        public String lookupToParentRecord {get;set;}
+
+        public queryFilters (String wtd, String foqr, String ltpr)
+	{
+            whatToDo = wtd;
+            fieldOnQueriedRecord = foqr;
+            lookupToParentRecord = ltpr;
+        }
+    }
+
+    public static List<sObject> aggregator( 
+                                               List<queryFilters> theQueryFilters,
+                                               List<Financial__c> financialRecords,
+                                               Set<Id> parentRecordIds,
+                                               SObjectField childParentLookupField,
+                                               String parentObjectString
+                                               )
+    {
+        List<sObject> output = new List<sObject>();
+        //preparing a Financial__c record type variable
+	Schema.SObjectType finType = Schema.getGlobalDescribe().get('Financial__c');
+	//getting back some information from our input records, storing in variable
+        Schema.SObjectType parentObject = Schema.getGlobalDescribe().get(parentObjectString);
+        
+	//preparing our dynamic query	
+	String fieldToPopulate = null;
+        String query = 'SELECT ' + childParentLookupField + ' recordId, ';
+        String innerQuery = '(SELECT Id FROM ' + parentObject + ' WHERE ID in : parentRecordIds) ';
+
+	//iterate through our query filters and append them to our query
+        for(queryFilters qf : TheQueryFilters)
+        {
+            query += qf.whatToDo + ' (' + qf.fieldOnQueriedRecord + ') amount ';
+            fieldToPopulate = qf.lookupToParentRecord;
+        }
+        query += ' FROM ' + finType + ' WHERE ' + childParentLookupField + ' in ' + innerQuery + ' GROUP BY ' + childParentLookupField;
+	
+	//output if we want to test th final value of our query to be done
+        System.debug('query string :: ' + query);
+	
+	//Example of what our query should look like
+    	//SELECT SUM(Est_Amount__c) result FROM Financial__c WHERE Opportunity__c in (SELECT Id FROM Opportunity WHERE Id in : sfl) GROUP BY Opportunity__c
+
+	//perform our query and store the results in a AggregateResult list
+        List<AggregateResult> listAR = Database.query(query);
+        
+	//the results should literally be in the form of ID, FieldValue
+	
+	//iterate through our returned records, and get ready to update our parent records with the new values
+        for(AggregateResult ar : listAR)
+        {
+            SObject s = parentObject.newSObject(); //dynamically create a new sObject of appropriate type
+            s.Id = Id.valueOf(String.valueof(ar.get('recordId'))); //this converts our returned ID into a proper ID format for our list
+            s.put(fieldToPopulate, ar.get('amount')); //this is doing to add the items back into the list in the format of Id, FieldWithValue
+            output.add(s);
+        }
+        System.debug('output list information :: ' + output.getSObjectType() + ' values of list :: ' + output );
+        return output;
+    }
+    
+    
+
+//Example useage (this example calls the function from a trigger):
+List<DynamicSOQLAggregator.queryFilters> qFilters = new List<RollupSummaryUtility.queryFilters>{new DynamicSOQLAggregator.queryFilters('SUM', 'Amount_Spent__c', 'Total_Amount_Spent__c')};
+
+toUpdate = DynamicSOQLAggregator.aggregator(fieldDefinitions, inputRecordList, RelatedOpportunities, Financial__c.Opportunity__c, 'Opportunity');
+
+if(toUpdate != null) update toUpdate;
+
+    
+    
