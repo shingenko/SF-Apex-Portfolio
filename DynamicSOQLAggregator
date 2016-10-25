@@ -75,7 +75,7 @@ public class DynamicSOQLAggregator
 //Example useage (this example calls the function from a trigger):
 List<DynamicSOQLAggregator.queryFilters> qFilters = new List<RollupSummaryUtility.queryFilters>{new DynamicSOQLAggregator.queryFilters('SUM', 'Amount_Spent__c', 'Total_Amount_Spent__c')};
 
-toUpdate = DynamicSOQLAggregator.aggregator(fieldDefinitions, inputRecordList, RelatedOpportunities, Financial__c.Opportunity__c, 'Opportunity');
+toUpdate = DynamicSOQLAggregator.aggregator(queryFiltersDeclared, inputRecordList, RelatedOpportunities, Financial__c.Opportunity__c, 'Opportunity');
 
 if(toUpdate != null) update toUpdate;
 
