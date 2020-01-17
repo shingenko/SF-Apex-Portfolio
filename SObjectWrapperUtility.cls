@@ -1,7 +1,9 @@
 public with sharing class SObjectWrapperUtility
 {
 	/**
-	Copyright (c) 2020 https://github.com/shingenko
+	Copyright (c) 2020  ShinGenko
+	https://github.com/shingenko/SF-Apex-Portfolio/edit/master/SObjectWrapperUtility.cls
+	https://github.com/samuel-reyes/SalesforcePortfolio/edit/master/SObjectWrapperUtility.cls
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
