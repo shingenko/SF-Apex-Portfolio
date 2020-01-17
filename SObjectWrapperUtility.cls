@@ -26,20 +26,20 @@ public with sharing class SObjectWrapperUtility
 	**/
 	
 	/** Map<FieldName,IsFieldWriteable> **/
-	private Map<String, Boolean> objectFields {get;set;}
+	private Set<String> objectFields {get;set;}
 	public String jsonString;
 
 	/**
-    * @author Samuel Reyes
-    * @date 2020-01-13
-    * @description Constructor(s) for class to perform initial setup tasks required to work properly.
-    * @param SObjectType objType - The Schema defined type of object whose fields we need to check against.
-    * @param SObject[] items - A list of instantiated SObjects for any single SObjectType.
-    */
+    	* @author Samuel Reyes
+    	* @date 2020-01-13
+    	* @description Constructor(s) for class to perform initial setup tasks required to work properly.
+    	* @param SObjectType objType - The Schema defined type of object whose fields we need to check against.
+    	* @param SObject[] items - A list of instantiated SObjects for any single SObjectType.
+    	*/
 	public SObjectWrapperUtility(SObjectType objType, SObject[] items)
 	{
 
-		this.objectFields = new Map<String,Boolean>();
+		this.objectFields = new Set<String>();
 		System.debug(LoggingLevel.DEBUG, 'SObjectWrapperUtility has been initialized with objType :: ' + objType.getDescribe().getName());
 
 		Map<String, Schema.SObjectField> fieldMap = objType.getDescribe().fields.getMap();
@@ -47,8 +47,7 @@ public with sharing class SObjectWrapperUtility
 		for( String fieldName : fieldMap.keySet() )
 		{
 			Schema.SObjectField currentField = fieldMap.get(fieldName);
-			if(currentField.getDescribe().isUpdateable()){ this.objectFields.put(currentField.getDescribe().getName(),true); }
-			else{ this.objectFields.put(currentField.getDescribe().getName(),false); }
+			this.objectFields.put(currentField.getDescribe().getName()) }
 		}
 
 		this.jsonString = this.generateJSON(items);
@@ -56,16 +55,16 @@ public with sharing class SObjectWrapperUtility
 	}
 
 	/**
-    * @author Samuel Reyes
-    * @date 2020-01-13
-    * @description Typically Salesforce will take records returned from Apex, and pass them to the front end with any null
-    * values as empty object keys. This creates problems when trying to sort records via Javascript. This wrapper will
-    * process the records prior to their being sent to the front end, and restores all unpopulated field keys.
-    * This does NOT SOQL query any missing field values, but will simply restore keys for records passed into it.
-    * @param SObject[] items - A list of instantiated SObjects for any single SObjectType.
-    * Wrapper currently only supports wrapping types of one item.
-    * @return JSON string ready to be passed to front end Javascript.
-    */
+	* @author Samuel Reyes
+	* @date 2020-01-13
+	* @description Typically Salesforce will take records returned from Apex, and pass them to the front end with any null
+	* values as empty object keys. This creates problems when trying to sort records via Javascript. This wrapper will
+	* process the records prior to their being sent to the front end, and restores all unpopulated field keys.
+	* This does NOT SOQL query any missing field values, but will simply restore keys for records passed into it.
+	* @param SObject[] items - A list of instantiated SObjects for any single SObjectType.
+	* Wrapper currently only supports wrapping types of one item.
+	* @return JSON string ready to be passed to front end Javascript.
+	*/
 	private String generateJSON(SObject[] items)
 	{
 		SObjectWrapper[] records = new SObjectWrapper[0];
@@ -75,7 +74,7 @@ public with sharing class SObjectWrapperUtility
 			Set<String> populatedFields = item.getPopulatedFieldsAsMap().keySet();
 			System.debug(LoggingLevel.FINE, 'populatedFields output :: ' + populatedFields);
 
-			for(String field : this.objectFields.keySet())
+			for(String field : this.objectFields)
 			{
 				if(!populatedFields.contains(field))
 				{
